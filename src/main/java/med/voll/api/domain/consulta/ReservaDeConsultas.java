@@ -26,7 +26,6 @@ public class ReservaDeConsultas {
     @Autowired
     private List<ValidadorDeConsultas> validadores;
 
-
     public DatosDetalleConsulta reservar(DatosReservaConsulta datos){
 
         if(!pacienteRepository.existsById(datos.idPaciente())){
@@ -41,8 +40,12 @@ public class ReservaDeConsultas {
         validadores.forEach(v -> v.validar(datos));
 
         var medico = elegirMedico(datos);
+        if(medico == null){
+            throw new ValidacionException("No existe un médico disponible en ese horario");
+        }
         var paciente = pacienteRepository.findById(datos.idPaciente()).get();
         var consulta = new Consulta(null, medico, paciente, datos.fecha());
+        consultaRepository.save(consulta);
         return new DatosDetalleConsulta(consulta);
     }
 
@@ -54,15 +57,6 @@ public class ReservaDeConsultas {
             throw new ValidacionException("Es necesario elegir una especialidad cuando no se elige un médico");
         }
 
-        List<Medico> medicosDisponibles = medicoRepository.elegirMedicoAleatorioDisponibleEnLaFecha(datos.especialidad(), datos.fecha());
-
-        // Verificar si hay médicos disponibles
-        if (medicosDisponibles.isEmpty()) {
-            throw new ValidacionException("No hay médicos disponibles para la especialidad y fecha seleccionadas");
-        }
-
-        // Seleccionar un médico aleatorio de la lista de médicos disponibles
-        Random rand = new Random();
-        return medicosDisponibles.get(rand.nextInt(medicosDisponibles.size()));
+        return medicoRepository.elegirMedicoAleatorioDisponibleEnLaFecha(datos.especialidad(), datos.fecha());
     }
 }

@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class ConsultaController {
 
     @Autowired
-    private ReservaDeConsultas reservaDeConsultas;
+    private ReservaDeConsultas reserva;
 
     @PostMapping
     @Transactional
     public ResponseEntity reservar(@RequestBody @Valid DatosReservaConsulta datos) {
 
-        reservaDeConsultas.reservar(datos);
+        var detalleConsulta = reserva.reservar(datos);
 
-        return ResponseEntity.ok(new DatosDetalleConsulta(null, null, null, null));
+        return ResponseEntity.ok(detalleConsulta);
     }
 }
