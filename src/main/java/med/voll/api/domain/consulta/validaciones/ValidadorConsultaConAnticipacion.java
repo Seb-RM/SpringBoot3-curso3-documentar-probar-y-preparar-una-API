@@ -2,6 +2,7 @@ package med.voll.api.domain.consulta.validaciones;
 
 import med.voll.api.domain.ValidacionException;
 import med.voll.api.domain.consulta.ConsultaRepository;
+import med.voll.api.domain.consulta.DatosReservaConsulta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -9,19 +10,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Component
-public class ValidadorHorarioConAnticipacion implements ValidadorCancelamientoDeConsulta {
+public class ValidadorConsultaConAnticipacion implements ValidadorDeConsultas{
 
-    @Autowired
-    private ConsultaRepository repository;
-
-    @Override
-    public void validar(DatosCancelamientoConsulta datos) {
-        var consulta = repository.getReferenceById(datos.idConsulta());
+    public void validar(DatosReservaConsulta datos) {
+        var fechaConsulta = datos.fecha();
         var ahora = LocalDateTime.now();
-        var diferenciaEnHoras = Duration.between(ahora, consulta.getData()).toHours();
-
-        if (diferenciaEnHoras < 24) {
-            throw new ValidacionException("¡La consulta solo puede ser cancelada con anticipación mínima de 24 horas!");
+        var diferenciaEnMinutos = Duration.between(ahora, fechaConsulta).toMinutes();
+        if(diferenciaEnMinutos < 30) {
+            throw new ValidacionException("Horario seleccionado con menos de 30 minutos de anticipacion");
         }
     }
 }

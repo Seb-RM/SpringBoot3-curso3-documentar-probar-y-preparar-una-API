@@ -1,6 +1,7 @@
 package med.voll.api.domain.consulta;
 
 import med.voll.api.domain.ValidacionException;
+import med.voll.api.domain.consulta.validaciones.ValidadorDeConsultas;
 import med.voll.api.domain.medico.Medico;
 import med.voll.api.domain.medico.MedicoRepository;
 import med.voll.api.domain.paciente.PacienteRepository;
@@ -22,7 +23,11 @@ public class ReservaDeConsultas {
     @Autowired
     private ConsultaRepository consultaRepository;
 
-    public void reservar(DatosReservaConsulta datos){
+    @Autowired
+    private List<ValidadorDeConsultas> validadores;
+
+
+    public DatosDetalleConsulta reservar(DatosReservaConsulta datos){
 
         if(!pacienteRepository.existsById(datos.idPaciente())){
             throw new ValidacionException("No existe un paciente con el id informado");
@@ -32,10 +37,13 @@ public class ReservaDeConsultas {
             throw new ValidacionException("No existe un médico con el id informado");
         }
 
+        //validaciones
+        validadores.forEach(v -> v.validar(datos));
+
         var medico = elegirMedico(datos);
         var paciente = pacienteRepository.findById(datos.idPaciente()).get();
         var consulta = new Consulta(null, medico, paciente, datos.fecha());
-        consultaRepository.save(consulta);
+        return new DatosDetalleConsulta(consulta);
     }
 
     private Medico elegirMedico(DatosReservaConsulta datos) {
